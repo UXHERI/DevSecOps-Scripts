@@ -2,7 +2,7 @@
 
 << task
 Install Terraform CLI from official HashiCorp APT repository on Ubuntu.
-Used in Wanderlust Mega Project for Infrastructure as Code (IaC).
+Used for Infrastructure as Code (IaC).
 task
 
 # Colors
