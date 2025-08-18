@@ -1,5 +1,10 @@
 #!/bin/bash
 
+<< task
+Installing Jenkins on Master Machine, adding it to "docker" user-group
+and accessing it through a URL
+task
+
 # ANSI color codes
 GREEN="\033[0;32m"
 YELLOW="\033[1;33m"

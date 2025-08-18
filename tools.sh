@@ -8,7 +8,7 @@ BOLD="\033[1m"
 RESET="\033[0m"
 
 << task
-Installing AWS CLI, KubeCTL and EKSCTL
+Installing AWS CLI, KubeCTL and EKSCTL for DevSecOps projects.
 task
 
 echo -e "${YELLOW}${BOLD}Updating package lists...${RESET}"

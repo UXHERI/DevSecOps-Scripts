@@ -1,5 +1,9 @@
 #!/bin/bash
 
+<< task
+Installing Docker to build, tag and push docker images to DockerHub.
+task
+
 # ANSI color codes
 GREEN="\033[0;32m"
 YELLOW="\033[1;33m"

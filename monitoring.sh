@@ -1,8 +1,8 @@
 #!/bin/bash
 
 << task
-Install and Configure Prometheus & Grafana via Helm for Kubernetes Monitoring
-Used in Wanderlust Mega Project
+Install and Configure Prometheus & Grafana via Helm for Kubernetes Monitoring.
+Used in DevSecOps Projects.
 task
 
 # Colors for output

@@ -2,7 +2,7 @@
 
 << task
 Creating EKS Cluster, associating IAM OIDC provider, 
-and adding Node Group for Wanderlust Mega Project.
+and adding Node Group for DevSecOps Projects.
 task
 
 # Colors for better output
@@ -15,9 +15,9 @@ BOLD="\033[1m"
 create_cluster() {
     echo -e "${YELLOW}${BOLD}Creating EKS cluster...${RESET}"
     eksctl create cluster \
-        --name="wanderlust" \
+        --name="EKS-UXHERI" \
         --region="us-east-1" \
-        --version="1.30" \
+        --version="1.33" \
         --without-nodegroup
     echo -e "${GREEN}${BOLD}EKS cluster creation complete.${RESET}"
 }
@@ -26,7 +26,7 @@ associate_oidc() {
     echo -e "${YELLOW}${BOLD}Associating IAM OIDC provider...${RESET}"
     eksctl utils associate-iam-oidc-provider \
         --region "us-east-1" \
-        --cluster "wanderlust" \
+        --cluster "EKS-UXHERI" \
         --approve
     echo -e "${GREEN}${BOLD}IAM OIDC provider association complete.${RESET}"
 }
@@ -34,14 +34,14 @@ associate_oidc() {
 create_nodegroup() {
     echo -e "${YELLOW}${BOLD}Creating node group...${RESET}"
     eksctl create nodegroup \
-        --cluster="wanderlust" \
+        --cluster="EKS-UXHERI" \
         --region="us-east-1" \
-        --name="wanderlust" \
+        --name="EKS-UXHERI-Node" \
         --node-type="t2.large" \
         --nodes=2 \
         --nodes-min=2 \
         --nodes-max=2 \
-        --node-volume-size=29 \
+        --node-volume-size=30 \
         --ssh-access \
         --ssh-public-key="eks-nodegroup-key"
     echo -e "${GREEN}${BOLD}Node group creation complete.${RESET}"

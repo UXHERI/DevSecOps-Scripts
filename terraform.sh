@@ -1,7 +1,7 @@
 #!/bin/bash
 
 << task
-Install Terraform CLI from official HashiCorp APT repository on Ubuntu.
+Install Terraform CLI from official HashiCorp APT repository.
 Used for Infrastructure as Code (IaC).
 task
 

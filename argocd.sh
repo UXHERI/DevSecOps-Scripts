@@ -1,7 +1,7 @@
 #!/bin/bash
 
 << task
-Install and Configure ArgoCD (Worker Node Accessible) for Wanderlust Mega Project
+Install and Configure ArgoCD (Worker Node Accessible) for DevSecOps Projects.
 task
 
 # Colors

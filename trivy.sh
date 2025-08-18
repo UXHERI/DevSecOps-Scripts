@@ -1,5 +1,9 @@
 #!/bin/bash
 
+<< task
+Installing Trivy for Container Image Scanning and Git Repositories Scanning.
+task
+
 # ANSI color codes
 GREEN="\033[0;32m"
 YELLOW="\033[1;33m"

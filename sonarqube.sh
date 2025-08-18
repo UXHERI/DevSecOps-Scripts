@@ -1,5 +1,9 @@
 #!/bin/bash
 
+<< task
+Installing SonarQube for Code Quality and Security Analysis.
+task
+
 # ANSI color codes
 GREEN="\033[0;32m"
 YELLOW="\033[1;33m"
