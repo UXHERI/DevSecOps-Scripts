@@ -7,7 +7,7 @@ task
 
 # ANSI color codes
 GREEN="\033[0;32m"
-YELLOW="\033[1;33m"
+YELLOW="\034[1;33m"
 RED="\033[0;31m"
 BOLD="\033[1m"
 RESET="\033[0m"
@@ -44,6 +44,48 @@ add_jenkins_to_docker() {
     echo -e "${GREEN}${BOLD}✔ Jenkins service restarted.${RESET}"
 }
 
+open_jenkins_port() {
+    echo -e "${YELLOW}${BOLD}Opening port 8080 in Security Group via AWS CLI...${RESET}"
+
+    # Get the public IP of current instance
+    PUBLIC_IP=$(curl -s https://checkip.amazonaws.com)
+
+    # Get instance ID using the public IP
+    INSTANCE_ID=$(aws ec2 describe-instances \
+        --filters "Name=ip-address,Values=$PUBLIC_IP" \
+        --query "Reservations[*].Instances[*].InstanceId" \
+        --output text)
+
+    if [ -z "$INSTANCE_ID" ]; then
+        echo -e "${RED}${BOLD}❌ Failed to get INSTANCE_ID. Ensure this EC2 has a public IP and AWS CLI is configured.${RESET}"
+        return 1
+    fi
+
+    # Get the security group ID
+    SG_ID=$(aws ec2 describe-instances \
+        --instance-ids "$INSTANCE_ID" \
+        --query "Reservations[0].Instances[0].SecurityGroups[0].GroupId" \
+        --output text)
+
+    if [ -z "$SG_ID" ]; then
+        echo -e "${RED}${BOLD}❌ Failed to retrieve Security Group ID.${RESET}"
+        return 1
+    fi
+
+    # Authorize ingress on port 8080 if not already allowed
+    aws ec2 authorize-security-group-ingress \
+        --group-id "$SG_ID" \
+        --protocol tcp \
+        --port 8080 \
+        --cidr 0.0.0.0/0 2>/dev/null
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}${BOLD}✔ Port 8080 opened on Security Group $SG_ID${RESET}"
+    else
+        echo -e "${YELLOW}${BOLD}⚠️ Port 8080 may already be open on Security Group $SG_ID${RESET}"
+    fi
+}
+
 show_jenkins_url() {
     echo -e "${YELLOW}${BOLD}Fetching EC2 Public IP...${RESET}"
     PUBLIC_IP=$(aws ec2 describe-instances \
@@ -72,6 +114,11 @@ fi
 
 if ! add_jenkins_to_docker; then
     echo -e "${RED}${BOLD}❌ CONFIGURING JENKINS USER FAILED!!!${RESET}"
+    exit 1
+fi
+
+if ! open_jenkins_port; then
+    echo -e "${RED}${BOLD}❌ Failed to open port 8080 in security group.${RESET}"
     exit 1
 fi
 
