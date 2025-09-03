@@ -130,4 +130,5 @@ fi
 
 show_jenkins_url
 show_jenkins_password
+
 echo -e "${GREEN}${BOLD}********** JENKINS INSTALLATION DONE **********${RESET}"
