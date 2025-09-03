@@ -7,7 +7,7 @@ task
 
 # ANSI color codes
 GREEN="\033[0;32m"
-YELLOW="\034[1;33m"
+YELLOW="\033[1;33m"
 RED="\033[0;31m"
 BOLD="\033[1m"
 RESET="\033[0m"
@@ -100,6 +100,12 @@ show_jenkins_url() {
     echo -e "${GREEN}${BOLD}✔ Jenkins is running at: http://$PUBLIC_IP:8080${RESET}"
 }
 
+show_jenkins_password() {
+    echo -e "${YELLOW}${BOLD}Fetching Jenkins Inital Password...${RESET}"
+    jenkins_password=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)
+echo -e "${GREEN}${BOLD}✔ Jenkins Password Successfully Fetched:${RESET} ${YELLOW}${BOLD}${jenkins_password}${RESET}"}
+}
+
 echo -e "${GREEN}${BOLD}********** JENKINS INSTALLATION STARTED **********${RESET}"
 
 if ! install_java; then
@@ -123,5 +129,5 @@ if ! open_jenkins_port; then
 fi
 
 show_jenkins_url
-
+show_jenkins_password
 echo -e "${GREEN}${BOLD}********** JENKINS INSTALLATION DONE **********${RESET}"

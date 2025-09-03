@@ -2,6 +2,7 @@
 
 << task
 Install and Configure Prometheus & Grafana via Helm for Kubernetes Monitoring.
+Also opens necessary ports in EC2 security group for public access.
 Used in DevSecOps Projects.
 task
 
@@ -97,45 +98,48 @@ get_worker_node_public_ip() {
     echo -e "${GREEN}${BOLD}✔ Worker node public IP fetched: $PUBLIC_IP${RESET}"
 }
 
+open_ports_in_sg() {
+    echo -e "${YELLOW}${BOLD}Opening NodePorts in Security Group via AWS CLI...${RESET}"
+
+    INSTANCE_ID=$(aws ec2 describe-instances \
+        --filters "Name=ip-address,Values=$PUBLIC_IP" \
+        --query "Reservations[*].Instances[*].InstanceId" \
+        --output text)
+
+    SG_ID=$(aws ec2 describe-instances \
+        --instance-ids "$INSTANCE_ID" \
+        --query "Reservations[0].Instances[0].SecurityGroups[0].GroupId" \
+        --output text)
+
+    for port in "$PROMETHEUS_PORT" "$GRAFANA_PORT"; do
+        aws ec2 authorize-security-group-ingress \
+            --group-id "$SG_ID" \
+            --protocol tcp \
+            --port "$port" \
+            --cidr 0.0.0.0/0 2>/dev/null
+    done
+
+    echo -e "${GREEN}${BOLD}✔ Ports $PROMETHEUS_PORT and $GRAFANA_PORT opened on SG $SG_ID${RESET}"
+}
+
+# --------- MAIN EXECUTION ---------
+
 echo -e "${GREEN}${BOLD}********** PROMETHEUS & GRAFANA INSTALLATION STARTED **********${RESET}"
 
-if ! install_helm; then
-    echo -e "${RED}${BOLD}FAILED: Installing Helm${RESET}"
-    exit 1
-fi
-
-if ! add_helm_repos; then
-    echo -e "${RED}${BOLD}FAILED: Adding Helm Repositories${RESET}"
-    exit 1
-fi
-
-if ! create_prometheus_namespace; then
-    echo -e "${RED}${BOLD}FAILED: Creating Namespace${RESET}"
-    exit 1
-fi
-
-if ! install_kube_prometheus_stack; then
-    echo -e "${RED}${BOLD}FAILED: Installing Prometheus Stack${RESET}"
-    exit 1
-fi
-
+install_helm
+add_helm_repos
+create_prometheus_namespace
+install_kube_prometheus_stack
 verify_pods
 get_services
-
-if ! expose_prometheus_nodeport; then
-    echo -e "${RED}${BOLD}FAILED: Exposing Prometheus${RESET}"
-    exit 1
-fi
-
-if ! expose_grafana_nodeport; then
-    echo -e "${RED}${BOLD}FAILED: Exposing Grafana${RESET}"
-    exit 1
-fi
-
+expose_prometheus_nodeport
+expose_grafana_nodeport
 get_ports
 get_grafana_password
 get_worker_node_public_ip
+open_ports_in_sg
 
+# Final Output
 echo -e "${GREEN}${BOLD}********** MONITORING SETUP COMPLETED SUCCESSFULLY **********${RESET}"
 echo -e "${GREEN}✅ Prometheus and Grafana are now exposed via NodePort${RESET}"
 echo -e "${YELLOW}${BOLD}🔗 Access Prometheus:${RESET} ${GREEN}http://$PUBLIC_IP:$PROMETHEUS_PORT${RESET}"

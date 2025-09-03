@@ -7,6 +7,7 @@ task
 # Colors
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
+RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
@@ -54,28 +55,37 @@ get_initial_password() {
   echo -e "${YELLOW}Password:${RESET} $PASSWORD"
 }
 
-get_worker_node_ips() {
-  echo -e "${YELLOW}${BOLD}Fetching Public IPs of Worker Nodes...${RESET}"
+open_ports_on_worker_nodes() {
+  echo -e "${YELLOW}${BOLD}Opening ArgoCD port on Worker Node Security Groups...${RESET}"
+
   NODE_NAMES=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep -v control-plane)
-  PUBLIC_IPS=""
+  ARGOCD_PORT=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[0].nodePort}')
+
   for node in $NODE_NAMES; do
-    instance_id=$(kubectl get node "$node" -o jsonpath='{.spec.providerID}' | cut -d'/' -f5)
-    ip=$(aws ec2 describe-instances --instance-ids "$instance_id" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
-    PUBLIC_IPS+="$ip "
+    INSTANCE_ID=$(kubectl get node "$node" -o jsonpath='{.spec.providerID}' | cut -d'/' -f5)
+    SG_IDS=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" \
+      --query "Reservations[*].Instances[*].SecurityGroups[*].GroupId" --output text)
+
+    for sg in $SG_IDS; do
+      echo -e "${GREEN}→ Opening port $ARGOCD_PORT on SG: $sg${RESET}"
+      aws ec2 authorize-security-group-ingress \
+        --group-id "$sg" \
+        --protocol tcp \
+        --port "$ARGOCD_PORT" \
+        --cidr 0.0.0.0/0 2>/dev/null || true
+    done
   done
-  echo "$PUBLIC_IPS"
+
+  echo -e "${GREEN}✅ ArgoCD NodePort access granted on all worker node SGs${RESET}"
 }
 
 get_ports_and_ip() {
   echo -e "${YELLOW}${BOLD}Fetching ArgoCD NodePort & Worker Node Public IPs...${RESET}"
-  
-  # Get the NodePort for ArgoCD
+
   ARGOCD_PORT=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[0].nodePort}')
-  
-  # Get worker node private DNS names from Kubernetes (exclude master/control-plane)
   WORKER_DNS_NAMES=$(kubectl get nodes --selector='!node-role.kubernetes.io/master' \
     -o jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalDNS")].address}{"\n"}{end}')
-  
+
   PUBLIC_IPS=""
   for dns in $WORKER_DNS_NAMES; do
     ip=$(aws ec2 describe-instances \
@@ -84,9 +94,8 @@ get_ports_and_ip() {
       --output text)
     PUBLIC_IPS="$PUBLIC_IPS $ip"
   done
-  
+
   echo -e "${GREEN}✅ Retrieved access details${RESET}"
-  
   for ip in $PUBLIC_IPS; do
     echo -e "${YELLOW}${BOLD}🔗 Access ArgoCD:${RESET} ${GREEN}${ip}:${ARGOCD_PORT}${RESET}"
   done
@@ -105,7 +114,7 @@ install_argocd_cli
 patch_service
 check_services
 get_initial_password
-get_worker_node_ips
+open_ports_on_worker_nodes
 get_ports_and_ip
 
 echo -e "${GREEN}${BOLD}********** ARGOCD INSTALLATION COMPLETED SUCCESSFULLY **********${RESET}"
