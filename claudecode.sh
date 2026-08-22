@@ -49,7 +49,7 @@ configure_bedrock_env() {
         cat >> ~/.bashrc << 'EOF'
 export CLAUDE_CODE_USE_BEDROCK=1
 export AWS_REGION=us-east-1
-export ANTHROPIC_MODEL='us.anthropic.claude-opus-4-6'
+export ANTHROPIC_MODEL='us.anthropic.claude-opus-4-5-20251101-v1:0'
 EOF
         echo -e "${GREEN}${BOLD}✔ Bedrock environment variables added to ~/.bashrc.${RESET}"
     else
@@ -58,7 +58,7 @@ EOF
 
     export CLAUDE_CODE_USE_BEDROCK=1
     export AWS_REGION=us-east-1
-    export ANTHROPIC_MODEL='us.anthropic.claude-opus-4-6'
+    export ANTHROPIC_MODEL='us.anthropic.claude-opus-4-5-20251101-v1:0'
 }
 
 verify_aws_credentials() {
